@@ -6,7 +6,7 @@
 <title>AIB</title>
 <meta name="description" content="مساعد الدراسة والبحث العلمي للطالب الجزائري">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#006233">
+<meta name="theme-color" content="#07090f">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -42,6 +42,28 @@ nav button[aria-current=true]{color:#fff;background:var(--g)}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--red);outline-offset:2px}
 #clock{font-size:44px;text-align:center;margin:8px 0}
 .res p{margin:0 0 12px}.res a{color:var(--g)}.ext{display:flex;flex-wrap:wrap;gap:8px}
+
+:root{color-scheme:dark;--g:#2f7bff;--ink:#e8eefc;--paper:#07090f;--mist:#0f1626;--red:#ff4d6d}
+body{background:var(--paper);color:var(--ink)}
+header{background:linear-gradient(90deg,#0a1224,#0d1b3d);border-bottom:1px solid #1d3b7a}
+.notice{background:#0f1626}
+.card{background:#0c1220;color:var(--ink);border-color:#1d3b7a;transition:box-shadow .2s}
+.card:hover{box-shadow:0 0 14px #2f7bff88}
+.card b{color:#6fa8ff}
+.chips button{background:#0c1220;color:#6fa8ff;border-color:#2f7bff}
+.chips button[aria-pressed=true]{background:#2f7bff;color:#fff;box-shadow:0 0 12px #2f7bffcc}
+input,select{background:#0c1220;color:var(--ink);border-color:#1d3b7a}
+input::placeholder{color:#7f8db0}
+.btn{background:linear-gradient(180deg,#3d8bff,#1f5fe0);color:#fff;box-shadow:0 0 10px #2f7bffaa,0 0 24px #2f7bff55;transition:box-shadow .2s}
+.btn:hover{box-shadow:0 0 16px #5aa0ffee,0 0 36px #2f7bff88}
+.out{background:var(--mist);border:1px solid #1d3b7a}
+nav{background:#0a1020;border-top:1px solid #1d3b7a}
+nav button{color:#b9c6e6}
+nav button[aria-current=true]{background:#2f7bff;color:#fff;box-shadow:0 0 14px #2f7bffcc}
+.res a,a{color:#6fa8ff}
+.logo{border-radius:14px;box-shadow:0 0 28px #2f7bff55}
+.copy{text-align:center;font-size:14px;opacity:.7;margin-top:28px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -73,6 +95,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <input id="sq" placeholder="مثال: الذكاء الاصطناعي في التعليم">
 <div class="row"><select id="sso" aria-label="الترتيب"><option value="relevance_score:desc">الأكثر صلة</option><option value="publication_date:desc">الأحدث</option></select><select id="syr" aria-label="الفترة"><option value="0">كل السنوات</option><option value="5">آخر 5 سنوات</option><option value="10">آخر 10 سنوات</option></select></div>
 <button class="btn" id="sgo">ابحث</button>
+<div class="chips" id="srec" style="margin-top:10px"></div>
 <div class="out res" id="sres" aria-live="polite"></div>
 <p style="font-size:15px">النتائج من قاعدة OpenAlex المفتوحة، وتشمل أعمالًا لباحثين منتمين لمؤسسات جزائرية. قد لا تشمل كل ما نُشر، وقد يكون التاريخ أو التصنيف غير دقيق أحيانًا، فتحقق من المصدر نفسه.</p>
 <p>ابحث أيضًا في:</p>
@@ -124,6 +147,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <ul class="l"><li>🟢 رسمي: منهاج الوزارة والجريدة الرسمية</li><li>🔵 أكاديمي محكّم: مجلات علمية ورسائل جامعية</li><li>🟡 غير رسمي: يحتاج تحققًا</li></ul>
 <p>إن وجدت خطأ، بلّغ عنه الجهة المسؤولة عن التطبيق ليُصحَّح.</p>
 </section>
+<p class="copy">© 2026 <bdi>MUSTAPHA BLIDA</bdi> — جميع الحقوق محفوظة</p>
 </main>
 <nav id="nav">
 <button data-t="home">🏠 الرئيسية</button><button data-t="study">📚 الدراسة</button><button data-t="research">🔬 البحث</button><button data-t="tools">🧰 أدوات</button><button data-t="about">ℹ️ حول</button>
@@ -182,23 +206,34 @@ var EXT={g:'https://scholar.google.com/scholar?q=',a:'https://www.google.com/sea
 document.querySelectorAll('[data-ext]').forEach(function(b){b.onclick=function(){var q=$('#sq').value.trim();if(!q){$('#sq').focus();return}window.open(EXT[b.dataset.ext]+encodeURIComponent(q),'_blank','noopener')}});
 function lnk(t,h){var a=document.createElement('a');a.textContent=t;a.href=/^https:\/\//.test(h)?h:'#';a.target='_blank';a.rel='noopener';return a}
 function getJSON(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
+var TY={article:'مقال','book-chapter':'فصل كتاب',book:'كتاب',dissertation:'أطروحة',preprint:'نسخة أولية'};
 function render(d){var o=$('#sres');o.textContent='';
 if(!d.results||!d.results.length){o.textContent='لا نتائج. جرّب كلمات أخرى أو بلغة أخرى، أو استعمل الروابط أدناه.';return}
 d.results.forEach(function(w){var c=document.createElement('p'),t=document.createElement('b');
 t.appendChild(lnk(w.display_name||'بدون عنوان',w.doi||w.id));c.appendChild(t);
-var a=(w.authorships||[]).slice(0,3).map(function(x){return x.author&&x.author.display_name}).filter(Boolean).join('، ');
+var names=(w.authorships||[]).map(function(x){return x.author&&x.author.display_name}).filter(Boolean);
 var s=w.primary_location&&w.primary_location.source?w.primary_location.source.display_name:'';
 var age=new Date().getFullYear()-w.publication_year,m=document.createElement('div');
-m.textContent=[a,s,w.publication_year].filter(Boolean).join(' — ')+(age>10?' ⚠️ قديم نسبيًا':'');
-c.appendChild(m);o.appendChild(c)})}
+m.textContent=[names.slice(0,3).join('، '),s,w.publication_year].filter(Boolean).join(' — ')+(age>10?' ⚠️ قديم نسبيًا':'');
+c.appendChild(m);
+var m2=document.createElement('div');m2.textContent='الاستشهادات: '+(w.cited_by_count||0)+(w.type?' — النوع: '+(TY[w.type]||w.type):'');c.appendChild(m2);
+var x=document.createElement('div'),oa=w.open_access&&w.open_access.oa_url;
+if(oa){x.appendChild(lnk('النص الكامل (مجاني)',oa));x.appendChild(document.createTextNode(' · '))}
+var cb=document.createElement('a');cb.href='#';cb.textContent='نسخ المرجع';
+cb.onclick=function(e){e.preventDefault();var ref=names.join('، ')+' ('+w.publication_year+'). '+(w.display_name||'')+'.'+(s?' '+s+'.':'')+(w.doi?' '+w.doi:'');
+if(navigator.clipboard)navigator.clipboard.writeText(ref).then(function(){cb.textContent='تم النسخ ✓'})};
+x.appendChild(cb);c.appendChild(x);o.appendChild(c)})}
+function recents(){try{return JSON.parse(localStorage.getItem('aib_r')||'[]')}catch(e){return[]}}
+function showRecent(){var b=$('#srec');b.textContent='';recents().forEach(function(q){var k=document.createElement('button');k.textContent=q;k.onclick=function(){$('#sq').value=q;runSearch()};b.appendChild(k)})}
+function saveRecent(q){try{var r=recents().filter(function(x){return x!==q});r.unshift(q);localStorage.setItem('aib_r',JSON.stringify(r.slice(0,5)))}catch(e){}showRecent()}
 function runSearch(){var q=$('#sq').value.trim(),o=$('#sres');
 if(!q){o.textContent='اكتب كلمات البحث أولًا.';return}
-var so=$('#sso').value,n=parseInt($('#syr').value,10)||0;o.textContent='جارٍ البحث...';
+var so=$('#sso').value,n=parseInt($('#syr').value,10)||0;o.textContent='جارٍ البحث...';saveRecent(q);
 var local='/api/search?q='+encodeURIComponent(q)+'&sort='+encodeURIComponent(so)+'&years='+n;
 var f='authorships.institutions.country_code:DZ'+(n?',from_publication_date:'+(new Date().getFullYear()-n)+'-01-01':'');
-var direct='https://api.openalex.org/works?search='+encodeURIComponent(q)+'&filter='+f+'&sort='+so+'&per-page=15&select=id,display_name,publication_year,doi,authorships,primary_location';
+var direct='https://api.openalex.org/works?search='+encodeURIComponent(q)+'&filter='+f+'&sort='+so+'&per-page=15&select=id,display_name,publication_year,doi,authorships,primary_location,cited_by_count,type,open_access';
 getJSON(local).catch(function(){return getJSON(direct)}).then(render).catch(function(){o.textContent='تعذّر الاتصال بمحرك البحث (قد ينتهي الحد اليومي المجاني). حاول لاحقًا أو استعمل الروابط أدناه.'})}
-$('#sgo').onclick=runSearch;$('#sq').addEventListener('keydown',function(e){if(e.key==='Enter')runSearch()});
+showRecent();$('#sgo').onclick=runSearch;$('#sq').addEventListener('keydown',function(e){if(e.key==='Enter')runSearch()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
