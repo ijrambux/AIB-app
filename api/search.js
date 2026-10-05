@@ -6,7 +6,7 @@ module.exports = async function (req, res) {
   var f = 'authorships.institutions.country_code:DZ';
   if (n > 0 && n <= 50) f += ',from_publication_date:' + (new Date().getFullYear() - n) + '-01-01';
   var u = 'https://api.openalex.org/works?search=' + encodeURIComponent(q) + '&filter=' + f + '&sort=' + sort +
-    '&per-page=15&select=id,display_name,publication_year,doi,authorships,primary_location';
+    '&per-page=15&select=id,display_name,publication_year,doi,authorships,primary_location,cited_by_count,type,open_access';
   if (process.env.OPENALEX_API_KEY) u += '&api_key=' + encodeURIComponent(process.env.OPENALEX_API_KEY);
   try {
     var r = await fetch(u);
